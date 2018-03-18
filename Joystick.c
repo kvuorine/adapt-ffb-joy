@@ -270,7 +270,14 @@ int Joystick_CreateInputReport(uint8_t inReportId, USB_JoystickReport_Data_t* co
 		outReportData->Y = (sw_report[1] >> 2) + ((sw_report[2] & 0x0F) << 6);
 		if (sw_report[2] & 0x08)
 			outReportData->Y |= (0b11111100 << 8);
-		outReportData->Button = ((sw_report[4] & 0x7F) << 2) + ((sw_report[3] & 0xC0) >> 6);
+		if ((sw_report[4] & 0b01000000) == 0b01000000)
+		{
+			// button 9 (shift) is held down
+			sw_report[4] &= 0b10111111;	// Lift up button 9; it's not to be used alone.
+			outReportData->Button = ((sw_report[4] & 0x7F) << 10) + ((sw_report[3] & 0xC0) << 2);
+		}
+		else
+			outReportData->Button = ((sw_report[4] & 0x7F) << 2) + ((sw_report[3] & 0xC0) >> 6);
 		outReportData->Hat = sw_report[2] >> 4;
 		outReportData->Rz = (sw_report[3] & 0x3f) - 32;
 		outReportData->Throttle = ((sw_report[5] & 0x3f) << 1) + (sw_report[4] >> 7);
